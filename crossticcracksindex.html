@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Cross Tic Crack </title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #f06, #4a90e2);
+        color: #fff;
+        height: 100vh;
+        margin: 0;
+    }
+    
+    h1 {
+        margin-top: 20px;
+        font-size: 2.5em;
+    }
+    
+    .input-names {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px 0;
+    }
+    
+    .input-names input {
+        margin: 5px;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        font-size: 1em;
+    }
+    
+    .input-names button {
+        padding: 10px 20px;
+        font-size: 1em;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .challengers {
+        display: flex;
+        justify-content: space-around;
+        width: 50%;
+        margin: 20px 0;
+    }
+    
+    #challengerX, #challengerO {
+        font-size: 1.5em;
+    }
+    
+    .game-board {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 100px);
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        font-size: 2.5em;
+        cursor: pointer;
+    }
+    
+    .status {
+        margin-top: 20px;
+        font-size: 1.5em;
+    }
+    
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1em;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .winner-container {
+        margin-top: 20px;
+        font-size: 1.5em;
+        display: none;
+    }
+</style>
+    
+    <h1> Cross Tic Crack</h1>
+    <div class="input-names">
+        <input type="text" id="playerXName" placeholder="Enter Player X Name">
+        <input type="text" id="playerOName" placeholder="Enter Player O Name">
+        <button id="startGameBtn">Start Game</button>
+    </div>
+    <div class="challengers" style="display:none;">
+        <div id="challengerX"></div>
+        <div id="challengerO"></div>
+    </div>
+    <div class="game-board" id="gameBoard">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <div class="status" id="status"></div>
+    <button id="restartBtn" style="display:none;">New Hit</button>
+    <div class="winner-container" id="winnerContainer"></div>
+    <script src="script.js"></script>
+    <script> 
+        document.addEventListener('DOMContentLoaded', () => {
+    const gameBoard = document.getElementById('gameBoard');
+    const statusDisplay = document.getElementById('status');
+    const restartBtn = document.getElementById('restartBtn');
+    const winnerContainer = document.getElementById('winnerContainer');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const playerXNameInput = document.getElementById('playerXName');
+    const playerONameInput = document.getElementById('playerOName');
+    const challengerX = document.getElementById('challengerX');
+    const challengerO = document.getElementById('challengerO');
+    const challengers = document.querySelector('.challengers');
+    const inputNames = document.querySelector('.input-names');
+    let gameActive = false;
+    let currentPlayer = "X";
+    let gameState = ["", "", "", "", "", "", "", "", ""];
+    let playerXScore = 0;
+    let playerOScore = 0;
+
+    const winningConditions = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+
+    startGameBtn.addEventListener('click', () => {
+        const playerXName = playerXNameInput.value.trim();
+        const playerOName = playerONameInput.value.trim();
+
+        if (playerXName && playerOName) {
+            challengerX.textContent = playerXName;
+            challengerO.textContent = playerOName;
+            gameActive = true;
+            inputNames.style.display = 'none';
+            challengers.style.display = 'flex';
+            gameBoard.style.display = 'grid';
+            restartBtn.style.display = 'block';
+            statusDisplay.innerHTML = `It's ${playerXName}'s turn`;
+        } else {
+            alert('Please enter names for both players.');
+        }
+    });
+
+    const handleCellPlayed = (clickedCell, clickedCellIndex) => {
+        gameState[clickedCellIndex] = currentPlayer;
+        clickedCell.innerHTML = currentPlayer;
+        clickedCell.style.color = currentPlayer === "X" ? "#f06" : "#4a90e2";
+    }
+
+    const handlePlayerChange = () => {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        statusDisplay.innerHTML = `It's ${currentPlayer === "X" ? challengerX.textContent : challengerO.textContent}'s turn`;
+    }
+
+    const handleResultValidation = () => {
+        let roundWon = false;
+        for (let i = 0; i < winningConditions.length; i++) {
+            const winCondition = winningConditions[i];
+            let a = gameState[winCondition[0]];
+            let b = gameState[winCondition[1]];
+            let c = gameState[winCondition[2]];
+            if (a === '' || b === '' || c === '') {
+                continue;
+            }
+            if (a === b && b === c) {
+                roundWon = true;
+                break;
+            }
+        }
+
+        if (roundWon) {
+            const winner = currentPlayer === "X" ? challengerX.textContent : challengerO.textContent;
+            const loser = currentPlayer === "X" ? challengerO.textContent : challengerX.textContent;
+            statusDisplay.innerHTML = `Player ${winner} has won! 🎉`;
+            winnerContainer.style.display = 'block';
+            winnerContainer.innerHTML = `Congratulations ${winner}! You won! 🎉<br>${loser}, better luck next time! 😢`;
+            if (currentPlayer === "X") {
+                playerXScore++;
+            } else {
+                playerOScore++;
+            }
+            gameActive = false;
+            return;
+        }
+
+        let roundDraw = !gameState.includes("");
+        if (roundDraw) {
+            statusDisplay.innerHTML = `Game ended in a draw!`;
+            gameActive = false;
+            return;
+        }
+
+        handlePlayerChange();
+    }
+
+    const handleCellClick = (clickedCellEvent) => {
+        const clickedCell = clickedCellEvent.target;
+        const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+        if (gameState[clickedCellIndex] !== "" || !gameActive) {
+            return;
+        }
+
+        handleCellPlayed(clickedCell, clickedCellIndex);
+        handleResultValidation();
+    }
+
+    const handleRestartGame = () => {
+        gameActive = false;
+        currentPlayer = "X";
+        gameState = ["", "", "", "", "", "", "", "", ""];
+        statusDisplay.innerHTML = "";
+        document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = "");
+        winnerContainer.style.display = 'none';
+        winnerContainer.innerHTML = "";
+        inputNames.style.display = 'flex';
+        challengers.style.display = 'none';
+        gameBoard
+
+    }
+
+    document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
+    restartBtn.addEventListener('click', handleRestartGame);
+});
+
+    </script>
+
+</body>
+</html>
